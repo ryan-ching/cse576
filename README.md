@@ -1,11 +1,11 @@
-# Welcome to CSE 576, 2021 Spring
+# Welcome to CSE 576, 2022 Spring
 
 In this repository you will find instructions on how to build your own image processing/computer vision library from (mostly) scratch. The work is divided out into different homework assignments, found in the `src/` directory.
 
 To get started, make sure you have `git`, a C compiler, and `make` installed. Then run:
 
 ```
-git clone https://github.com/UW-CSE-576-2021SP/Homework
+git clone https://github.com/UW-CSE-576-2022SP/Homework
 cd Homework
 make
 ```
