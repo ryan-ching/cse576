@@ -1,0 +1,15 @@
+*.swp
+*.o
+*.a
+*.so
+*.pyc
+*.exe
+*.jpg
+__pycache__/*
+obj/*
+.DS_Store
+!figs/*
+!data/*
+
+main
+*.csv
