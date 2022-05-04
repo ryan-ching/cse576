@@ -13,9 +13,12 @@ int match_compare(const void *a, const void *b)
 {
     match *ra = (match *)a;
     match *rb = (match *)b;
-    if (ra->distance < rb->distance) return -1;
-    else if (ra->distance > rb->distance) return  1;
-    else return 0;
+    if (ra->distance < rb->distance)
+        return -1;
+    else if (ra->distance > rb->distance)
+        return 1;
+    else
+        return 0;
 }
 
 // Helper function to create 2d points.
@@ -24,7 +27,8 @@ int match_compare(const void *a, const void *b)
 point make_point(float x, float y)
 {
     point p;
-    p.x = x; p.y = y;
+    p.x = x;
+    p.y = y;
     return p;
 }
 
@@ -34,18 +38,24 @@ point make_point(float x, float y)
 image both_images(image a, image b)
 {
     image both = make_image(a.w + b.w, a.h > b.h ? a.h : b.h, a.c > b.c ? a.c : b.c);
-    int i,j,k;
-    for(k = 0; k < a.c; ++k){
-        for(j = 0; j < a.h; ++j){
-            for(i = 0; i < a.w; ++i){
+    int i, j, k;
+    for (k = 0; k < a.c; ++k)
+    {
+        for (j = 0; j < a.h; ++j)
+        {
+            for (i = 0; i < a.w; ++i)
+            {
                 set_pixel(both, i, j, k, get_pixel(a, i, j, k));
             }
         }
     }
-    for(k = 0; k < b.c; ++k){
-        for(j = 0; j < b.h; ++j){
-            for(i = 0; i < b.w; ++i){
-                set_pixel(both, i+a.w, j, k, get_pixel(b, i, j, k));
+    for (k = 0; k < b.c; ++k)
+    {
+        for (j = 0; j < b.h; ++j)
+        {
+            for (i = 0; i < b.w; ++i)
+            {
+                set_pixel(both, i + a.w, j, k, get_pixel(b, i, j, k));
             }
         }
     }
@@ -61,16 +71,18 @@ image both_images(image a, image b)
 image draw_matches(image a, image b, match *matches, int n, int inliers)
 {
     image both = both_images(a, b);
-    int i,j;
-    for(i = 0; i < n; ++i){
-        int bx = matches[i].p.x; 
-        int ex = matches[i].q.x; 
+    int i, j;
+    for (i = 0; i < n; ++i)
+    {
+        int bx = matches[i].p.x;
+        int ex = matches[i].q.x;
         int by = matches[i].p.y;
         int ey = matches[i].q.y;
-        for(j = bx; j < ex + a.w; ++j){
-            int r = (float)(j-bx)/(ex+a.w - bx)*(ey - by) + by;
-            set_pixel(both, j, r, 0, i<inliers?0:1);
-            set_pixel(both, j, r, 1, i<inliers?1:0);
+        for (j = bx; j < ex + a.w; ++j)
+        {
+            int r = (float)(j - bx) / (ex + a.w - bx) * (ey - by) + by;
+            set_pixel(both, j, r, 0, i < inliers ? 0 : 1);
+            set_pixel(both, j, r, 1, i < inliers ? 1 : 0);
             set_pixel(both, j, r, 2, 0);
         }
     }
@@ -118,7 +130,13 @@ image find_and_draw_matches(image a, image b, float sigma, float thresh, int nms
 float l1_distance(float *a, float *b, int n)
 {
     // TODO: return the correct number.
-    return 0;
+    float sum;
+    int i;
+    for (i = 0; i < n; i++)
+    {
+        sum += fabs(fabs(*(a + i)) - fabs(*(b + i)));
+    }
+    return sum;
 }
 
 // Finds best matches between descriptors of two images.
@@ -129,30 +147,58 @@ float l1_distance(float *a, float *b, int n)
 //          one other descriptor in b.
 match *match_descriptors(descriptor *a, int an, descriptor *b, int bn, int *mn)
 {
-    int i,j;
+    int i, j;
 
     // We will have at most an matches.
     *mn = an;
     match *m = calloc(an, sizeof(match));
-    for(j = 0; j < an; ++j){
+    float distance, min_distance;
+    for (j = 0; j < an; ++j)
+    {
         // TODO: for every descriptor in a, find best match in b.
         // record ai as the index in *a and bi as the index in *b.
-        int bind = 0; // <- find the best match
+        min_distance = 999999.0; // Initially set to very high
+        int bind = 0;            // <- find the best match
+        for (i = 0; i < bn; ++i)
+        {
+            distance = l1_distance((a + j)->data, (b + i)->data, sizeof(*(a + j)));
+            if (distance < min_distance)
+            {
+                bind = i;
+                min_distance = distance;
+            }
+        }
         m[j].ai = j;
         m[j].bi = bind; // <- should be index in b.
         m[j].p = a[j].p;
         m[j].q = b[bind].p;
-        m[j].distance = 0; // <- should be the smallest L1 distance!
+        m[j].distance = min_distance; // <- should be the smallest L1 distance!
     }
 
     int count = 0;
-    int *seen = calloc(bn, sizeof(int));
+    int *seen = calloc(bn, sizeof(int)); // Iniitalize an array of 0s called seen
     // TODO: we want matches to be injective (one-to-one).
     // Sort matches based on distance using match_compare and qsort.
     // Then throw out matches to the same element in b. Use seen to keep track.
     // Each point should only be a part of one match.
     // Some points will not be in a match.
     // In practice just bring good matches to front of list, set *mn.
+    // Loop over all matches
+    //      - if b-index of current match != 1 in 'seen
+    //          - set corresponding value in 'seen' to 1
+    //          - retain the match
+    //      - else, discard the match
+    int mc;
+    for (mc = 0; mc < sizeof(*m); ++mc)
+    {
+        if (*(seen + m[mc].bi) != 1)
+        {
+            *(seen + m[mc].bi) = 1;
+        }
+        else
+        {
+        }
+    }
     *mn = count;
     free(seen);
     return m;
@@ -214,28 +260,29 @@ void randomize_matches(match *m, int n)
 // returns: matrix representing homography H that maps image a to image b.
 matrix compute_homography(match *matches, int n)
 {
-    matrix M = make_matrix(n*2, 8);
-    matrix b = make_matrix(n*2, 1);
+    matrix M = make_matrix(n * 2, 8);
+    matrix b = make_matrix(n * 2, 1);
 
     int i;
-    for(i = 0; i < n; ++i){
-        double x  = matches[i].p.x;
+    for (i = 0; i < n; ++i)
+    {
+        double x = matches[i].p.x;
         double xp = matches[i].q.x;
-        double y  = matches[i].p.y;
+        double y = matches[i].p.y;
         double yp = matches[i].q.y;
         // TODO: fill in the matrices M and b.
-
     }
     matrix a = solve_system(M, b);
-    free_matrix(M); free_matrix(b); 
+    free_matrix(M);
+    free_matrix(b);
 
     // If a solution can't be found, return empty matrix;
     matrix none = {0};
-    if(!a.data) return none;
+    if (!a.data)
+        return none;
 
     matrix H = make_matrix(3, 3);
     // TODO: fill in the homography H based on the result in a.
-
 
     free_matrix(a);
     return H;
@@ -275,10 +322,10 @@ image combine_images(image a, image b, matrix H)
     matrix Hinv = matrix_invert(H);
 
     // Project the corners of image b into image a coordinates.
-    point c1 = project_point(Hinv, make_point(0,0));
-    point c2 = project_point(Hinv, make_point(b.w-1, 0));
-    point c3 = project_point(Hinv, make_point(0, b.h-1));
-    point c4 = project_point(Hinv, make_point(b.w-1, b.h-1));
+    point c1 = project_point(Hinv, make_point(0, 0));
+    point c2 = project_point(Hinv, make_point(b.w - 1, 0));
+    point c3 = project_point(Hinv, make_point(0, b.h - 1));
+    point c4 = project_point(Hinv, make_point(b.w - 1, b.h - 1));
 
     // Find top left and bottom right corners of image b warped into image a.
     point topleft, botright;
@@ -295,18 +342,22 @@ image combine_images(image a, image b, matrix H)
 
     // Can disable this if you are making very big panoramas.
     // Usually this means there was an error in calculating H.
-    if(w > 7000 || h > 7000){
+    if (w > 7000 || h > 7000)
+    {
         fprintf(stderr, "output too big, stopping\n");
         return copy_image(a);
     }
 
-    int i,j,k;
+    int i, j, k;
     image c = make_image(w, h, a.c);
-    
+
     // Paste image a into the new image offset by dx and dy.
-    for(k = 0; k < a.c; ++k){
-        for(j = 0; j < a.h; ++j){
-            for(i = 0; i < a.w; ++i){
+    for (k = 0; k < a.c; ++k)
+    {
+        for (j = 0; j < a.h; ++j)
+        {
+            for (i = 0; i < a.w; ++i)
+            {
                 // TODO: fill in.
             }
         }
@@ -336,7 +387,7 @@ image panorama_image(image a, image b, float sigma, float thresh, int nms, float
     int an = 0;
     int bn = 0;
     int mn = 0;
-    
+
     // Calculate corners and descriptors
     descriptor *ad = harris_corner_detector(a, sigma, thresh, nms, &an);
     descriptor *bd = harris_corner_detector(b, sigma, thresh, nms, &bn);
@@ -347,7 +398,8 @@ image panorama_image(image a, image b, float sigma, float thresh, int nms, float
     // Run RANSAC to find the homography
     matrix H = RANSAC(m, mn, inlier_thresh, iters, cutoff);
 
-    if(draw){
+    if (draw)
+    {
         // Mark corners and matches between images
         mark_corners(a, ad, an);
         mark_corners(b, bd, bn);
