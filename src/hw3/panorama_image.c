@@ -344,7 +344,7 @@ matrix compute_homography(match *matches, int n)
     {
         zeros.data[i][0] = 0;
     }
-    H = solve_system(a, zeros);
+    H = solve_system(a, b);
     free_matrix(a);
     return H;
 }

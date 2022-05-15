@@ -211,9 +211,9 @@ image nms_image(image im, int w)
     {
         for (y = 0; y < im.h; y++)
         {
-            for (xn = x - w; xn < x + w; xn++)
+            for (xn = x - w; xn < x + w + 1; xn++)
             {
-                for (yn = y - w; yn < y + w; yn++)
+                for (yn = y - w; yn < y + w + 1; yn++)
                 {
                     // if neighboring pixel response value > current pixel response value, set response to low
                     res = (get_pixel(im, xn, yn, 0) > get_pixel(im, x, y, 0)) ? low : get_pixel(im, x, y, 0);
@@ -244,7 +244,6 @@ descriptor *harris_corner_detector(image im, float sigma, float thresh, int nms,
     image Rnms = nms_image(R, nms);
 
     //TODO: count number of responses over threshold
-
     int count = 0;
     int x, y, c;
     for (x = 0; x < Rnms.w; x++)
