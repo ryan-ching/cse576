@@ -75,16 +75,13 @@ void gradient_matrix(matrix m, ACTIVATION a, matrix d)
                 // TODO
                 d.data[i][j] *= x * (1.0 - x);
             }
-            else if (x <= 0)
+            else if (a == RELU)
             {
-                if (a == RELU)
-                {
-                    d.data[i][j] = 0;
-                }
-                else if (a == LRELU)
-                {
-                    d.data[i][j] *= 0.1;
-                }
+                d.data[i][j] *= (x <= 0) ? 0 : 1;
+            }
+            else if (a == LRELU) // Gradient = {1 : f(x) > 0. 0.1 else}
+            {
+                d.data[i][j] *= (x <= 0) ? 0.1 : 1;
             }
         }
     }
